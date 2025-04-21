@@ -76,7 +76,7 @@ namespace WebApplication1.Controllers
             {
                 return NotFound();
             }
-            return Ok(pos);
+            return Ok("Sua thanh cong");
         }
     }
 }
