@@ -51,7 +51,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     };
 });
 builder.Services.AddScoped<IAccountService, AccountService>();
-
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPositionService, PositionService>();
+builder.Services.AddScoped<ISalaryService, SalaryService>();
 
 var app = builder.Build();
 app.UseCors();

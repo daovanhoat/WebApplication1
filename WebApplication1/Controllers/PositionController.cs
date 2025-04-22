@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Service;
 
 namespace WebApplication1.Controllers
 {
@@ -9,74 +10,41 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class PositionController : ControllerBase
     {
-        private readonly UserDBContext _Context;
-        public PositionController(UserDBContext context)
+        private readonly IPositionService _positionService;
+
+        public PositionController(IPositionService positionService)
         {
-            _Context = context;
+            _positionService = positionService;
         }
 
         [HttpGet] 
         public async Task<IActionResult> getAll()
         {
-            var position = await _Context.Positions.ToListAsync();
-            return Ok(position);
+            var result = await _positionService.GetAllAnsyc();
+            return Ok(result);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostPosition([FromBody] PositionDtocs positionDto)
+        public async Task<IActionResult> PostPosition([FromBody] PositionDtocs dto)
         {
-            var newPosition = new PositionModel
-            {
-                Name = positionDto.Name,
-                HeSo = positionDto.HeSo,
-                createAt = DateTime.Now // Tự động gán ngày tạo
-            };
-
-            _Context.Positions.Add(newPosition);
-            await _Context.SaveChangesAsync();
-
-            // Có thể trả lại DTO hoặc entity tùy bạn muốn
-            return Ok(new
-            {
-                newPosition.PositionId,
-                newPosition.Name,
-                newPosition.HeSo
-            });
+            var created = await _positionService.AddAnsyc(dto);
+            return Ok(created);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePosition(int id)
         {
-            var position = await _Context.Positions.FindAsync(id);
-            if (position == null)
-            {
-                return NotFound();
-            }
-            _Context.Positions.Remove(position);
-            await _Context.SaveChangesAsync();
+            var success = await _positionService.DeleteAnsyc(id);
+            if (!success) return NotFound();
             return NoContent();
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPosition(int id, PositionDtocs positionDto)
+        public async Task<IActionResult> PutPosition(int id, PositionDtocs dto)
         {
-            var pos = await _Context.Positions.FindAsync(id);
-            if (pos == null)
-            {
-                return NotFound();
-            }
-            pos.Name = positionDto.Name;
-            pos.HeSo = positionDto.HeSo;
-
-            try
-            {
-                await _Context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                return NotFound();
-            }
-            return Ok("Sua thanh cong");
+            var success = await _positionService.UpdateAnsyc(id, dto);
+            if (!success) return NotFound("Không tìm thấy vị trí");
+            return Ok("Sửa thành công");
         }
     }
 }

@@ -1,7 +1,13 @@
-﻿namespace WebApplication1.Service
+﻿using WebApplication1.Models;
+
+namespace WebApplication1.Service
 {
     public interface IUserService
     {
-
+        Task<IEnumerable<object>> GetAllAnsyc();
+        Task<object> CreateUserAnsyc(CreatePostDto dto);
+        Task<bool> UpdateUserAnsyc(int id, CreatePostDto dto);
+        Task<bool> DeleteUserAnsyc(int id);
+        Task<IEnumerable<UserModel>> SearchUserAnsyc(string keyword);
     }
 }

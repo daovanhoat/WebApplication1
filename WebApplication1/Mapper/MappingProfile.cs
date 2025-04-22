@@ -12,6 +12,9 @@ namespace WebApplication1.Mapper
                 .ForMember(dest => dest.Password, opt => opt.MapFrom(src => "******"))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => "hidden@example.com"));
             CreateMap<RegisterDto, AccountModel>();
+            CreateMap<CreatePostDto, UserModel>();
+            CreateMap<PositionModel, PositionDtocs>().ReverseMap();
+            CreateMap<SalaryModels, SalaryDto>().ReverseMap();
         }
     }
 }

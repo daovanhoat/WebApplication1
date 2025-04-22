@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Service;
 
 namespace WebApplication1.Controllers
 {
@@ -9,70 +10,31 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class SalaryController : ControllerBase
     {
-        private readonly UserDBContext _Context;
-        public SalaryController(UserDBContext context)
+        private readonly ISalaryService _salaryService;
+
+        public SalaryController(ISalaryService salaryService)
         {
-            _Context = context;
+            _salaryService = salaryService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var salaries = await _Context.Salaries
-                .Include(s => s.User)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.UserId,
-                    UserName = s.User.Name,
-                    s.SalaryBasic,
-                    s.WorkDay,
-                    s.TotalSalary,
-                    s.CreateDate
-                })
-                .ToListAsync();
-            return Ok(salaries);
+            var result = await _salaryService.GetAllAsync();
+            return Ok(result);
         }
         [HttpPost("Calculate")]
-        public async Task<IActionResult> CalculateSalary([FromBody] SalaryDto model)
+        public async Task<IActionResult> CalculateSalary([FromBody] SalaryDto dto)
         {
-            var user = await _Context.Users
-                .Include(u => u.Position) // Include để lấy hệ số lương
-                .FirstOrDefaultAsync(u => u.UserId == model.UserId);
-
-            if (user == null)
-            {
-                return NotFound("Nhân viên không tồn tại");
-            }
-
-            var workDay = user.Cong;
-            var heSo = user.Position.HeSo;
-            var totalSalary = workDay * model.SalaryBasic * heSo;
-
-            var salary = new SalaryModels
-            {
-                UserId = model.UserId,
-                WorkDay = workDay,
-                SalaryBasic = model.SalaryBasic,
-                TotalSalary = totalSalary,
-                CreateDate = DateTime.Now
-            };
-
-            _Context.Salaries.Add(salary);
-            await _Context.SaveChangesAsync();
-
-            return Ok(salary);
+            var result = await _salaryService.CalculateSalaryAsync(dto);
+            if (result == null) return NotFound("Nhân viên không tồn tại");
+            return Ok(result);
         }
     
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var salary = await _Context.Salaries.FindAsync(id);
-            if (salary == null)
-            {
-                return NotFound();
-            }
-            _Context.Salaries.Remove(salary);
-            await _Context.SaveChangesAsync();
+            var result = await _salaryService.DeleteAsync(id);
+            if (!result) return NotFound();
             return NoContent();
         }
     }

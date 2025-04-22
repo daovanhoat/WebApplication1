@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Service;
 using WebApplication1.Validation;
 
 namespace WebApplication1.Controllers
@@ -15,131 +16,51 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserDBContext _Context;
-        public UserController(UserDBContext context)
+        private readonly IUserService _userService;
+        public UserController(IUserService userService)
         {
-            _Context = context;
+            _userService = userService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var users = await _Context.Users
-                .Include(u => u.Position) // Nạp cả thông tin vị trí
-        .ToListAsync();
-
-            var result = users.Select(u => new
-            {
-                u.UserId,
-                u.Name,
-                u.Gener,
-                u.Age,
-                u.Cong,
-                u.PositionId,
-                positionName = u.Position.Name,   // Đây là tên vị trí
-                heSoLuong = u.Position.HeSo
-            }).ToList();
-
+            var result = await _userService.GetAllAnsyc();
             return Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> PostUser([FromBody] CreatePostDto dto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Tìm Position theo Id để lấy hệ số
-            var position = await _Context.Positions.FindAsync(dto.PositionId);
-            if (position == null)
-            {
-                return NotFound("Vị trí không tồn tại.");
-            }
-
-            var user = new UserModel
-            {
-                Name = dto.Name,
-                Gener = dto.Gener,
-                Age = dto.Age,
-                Cong = dto.Cong,
-                PositionId = dto.PositionId,
-                // Các trường tính lương hoặc các logic khác có thể xử lý sau
-            };
-
-            _Context.Users.Add(user);
-            await _Context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                id = user.UserId,
-                user.Name,
-                user.Age,
-                user.Cong,
-                user.PositionId,
-                PositionName = user.Position.Name,
-                HeSoLuong = position.HeSo
-            });
+            var result = await _userService.CreateUserAnsyc(dto);
+            if (result == null)
+                return NotFound("Vi tri khong ton tai");
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _Context.Users!.FindAsync(id);
-            if (user == null)
-            {
+            var result = await _userService.DeleteUserAnsyc(id);
+            if (!result)
                 return NotFound();
-            }
-
-            _Context.Users.Remove(user);
-            await _Context.SaveChangesAsync();
-            return NoContent();
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, CreatePostDto user)
+        public async Task<IActionResult> PutUser(int id, CreatePostDto dto)
         {
-
-            var existingUser = await _Context.Users.Include(u => u.Position).FirstOrDefaultAsync(u => u.UserId == id);
-            if (existingUser == null)
-            {
-                return NotFound();
-            }
-
-            existingUser.Name = user.Name;
-            existingUser.Gener = user.Gener;
-            existingUser.Age = user.Age;
-            existingUser.Cong = user.Cong;
-
-            var position = await _Context.Positions.FindAsync(user.PositionId);
-            if (position != null)
-            {
-                existingUser.Position = position; // Gán vị trí mới cho người dùng
-            }
-            else
-            {
-                return BadRequest("Vị trí không tồn tại.");
-            }
-
-            try
-            {
-                await _Context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                    return NotFound();
-                
-            }
+            var result = await _userService.UpdateUserAnsyc(id, dto);
+            if (!result)
+                return BadRequest("Vi tri khong ton tai");
             return NoContent();
+
         }
 
         [HttpGet("search")]
         public async Task<IActionResult> Search(String keyword)
         {
-            var result = await _Context.Users
-                .Where(u => u.Name.Contains(keyword))
-                .ToListAsync();
+            var result = await _userService.SearchUserAnsyc(keyword);
             return Ok(result);
         }
     }
