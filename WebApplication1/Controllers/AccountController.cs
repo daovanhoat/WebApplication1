@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using AutoMapper;
+using WebApplication1.Service;
 
 namespace WebApplication1.Controllers
 {
@@ -9,64 +11,46 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly UserDBContext _Context;
+        private readonly IAccountService _accountService;
 
-        public AccountController(UserDBContext context)
+        public AccountController(IAccountService accountService)
         {
-            _Context = context;
+            _accountService = accountService;
         }
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(AccountModel model)
-        {
-            var exist = await _Context.Accounts
-                .AnyAsync(a => a.UserName == model.UserName || a.Email == model.Email);
-            if (exist)
-            {
-                return BadRequest("Tai khoan da ton tai");
-            }
-            model.createAt = DateTime.Now;
-            _Context.Accounts.Add(model);
-            await _Context.SaveChangesAsync();
 
-            return Ok("Dang ky thanh cong");
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto registerDto)
+        {
+            var result = await _accountService.RegisterAsync(registerDto);
+            if(result == "Tai khoan da ton tai")
+                return BadRequest(result);
+            return Ok(result);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(AccountDto dto)
+        public async Task<IActionResult> Login(LoginDto dto)
         {
-            var account = await _Context.Accounts
-                .FirstOrDefaultAsync(a => a.UserName ==  dto.UserName && a.Password == dto.Password);
+            var account = await _accountService.LoginAsync(dto);
             if (account == null)
-            {
                 return Unauthorized("Sai tai khoan hoac mat khau");
-            }
-
-            return Ok(new
-            {
-                message = "Dang nhap thanh cong",
-                accountId = account.AccountId,
-                userName = account.UserName
-            });
+            return Ok(account);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var account = await _Context.Accounts.ToListAsync();
-            return Ok(account);
+            var list = await _accountService.GetAllAsync();
+            return Ok(list);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAccunt (int id)
         {
-            var account = await _Context.Accounts.FindAsync(id);
-            if (account == null)
-            {
+            var result = await _accountService.DeleteAccountAsync(id);
+            if (result == "Khong tim thay tai khoan")
                 return NotFound();
-            }
-            _Context.Accounts.Remove(account);
-            await _Context.SaveChangesAsync();
-            return Ok("Xóa thành công");
+            return Ok(result);
+            
         }
     }
 }

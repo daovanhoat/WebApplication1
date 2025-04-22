@@ -97,11 +97,6 @@ namespace WebApplication1.Controllers
             return NoContent();
         }
 
-        private bool UserExist(int id)
-        {
-            return _Context.Users.Any(u => u.UserId == id);
-        }
-
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, CreatePostDto user)
         {
