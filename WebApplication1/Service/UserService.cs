@@ -21,6 +21,9 @@ namespace WebApplication1.Service
             var position = await _Context.Positions.FindAsync(dto.PositionId);
             if (position == null) return null;
 
+            var department = await _Context.Departments.FindAsync(dto.DepartmentId); 
+            if (department == null) return null;
+
             var user = _mapper.Map<UserModel>(dto);
             _Context.Users.Add(user);
             await _Context.SaveChangesAsync();
@@ -33,7 +36,9 @@ namespace WebApplication1.Service
                 user.Cong,
                 user.PositionId,
                 PositionName = position.Name,
-                HeSoLuong = position.HeSo
+                HeSoLuong = position.HeSo,
+                user.DepartmentId,
+                DepartmentName = department.Name,
             };
         }
 
@@ -47,20 +52,55 @@ namespace WebApplication1.Service
 
         }
 
+        public async Task<IEnumerable<object>> FilterByDepartmentAsync(int? departmentId)
+        {
+            var query = from u in _Context.Users
+                        join p in _Context.Positions on u.PositionId equals p.PositionId
+                        join d in _Context.Departments on u.DepartmentId equals d.DepartmentId
+                        select new
+                        {
+                            u.UserId,
+                            u.Name,
+                            u.Gener,
+                            u.Age,
+                            u.Cong,
+                            u.PositionId,
+                            PositionName = p.Name,
+                            HeSoLuong = p.HeSo,
+                            u.DepartmentId,
+                            DepartmentName = d.Name
+                        };
+
+            // Lọc nếu có departmentId được truyền vào
+            if (departmentId.HasValue)
+            {
+                query = query.Where(x => x.DepartmentId == departmentId.Value);
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<IEnumerable<object>> GetAllAnsyc()
         {
-            var users = await _Context.Users.Include(u => u.Position).ToListAsync();
-            return users.Select(u => new
-            {
-                u.UserId,
-                u.Name,
-                u.Gener,
-                u.Age,
-                u.Cong,
-                u.PositionId,
-                positionName = u.Position.Name,
-                heSoLuong = u.Position.HeSo
-            });
+            //var users = await _Context.Users.Include(u => u.Position).ToListAsync();
+            var user = from u in _Context.Users
+                       join p in _Context.Positions on u.PositionId equals p.PositionId
+                       join d in _Context.Departments on u.DepartmentId equals d.DepartmentId
+                       select new
+                       {
+                           u.UserId,
+                           u.Name,
+                           u.Gener,
+                           u.Age,
+                           u.Cong,
+                           u.PositionId,
+                           PositionName = p.Name,
+                           Hesoluong = p.HeSo,
+                           u.DepartmentId,
+                           DepartmentName = d.Name,
+                       };
+
+            return await user.ToListAsync();
         }
 
         public async Task<IEnumerable<UserModel>> SearchUserAnsyc(string keyword)
@@ -71,13 +111,21 @@ namespace WebApplication1.Service
 
         public async Task<bool> UpdateUserAnsyc(int id, CreatePostDto dto)
         {
-            var user = await _Context.Users.Include(u => u.Position).FirstOrDefaultAsync(u => u.UserId ==  id);
+            var user = await _Context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return false;
+
             var position = await _Context.Positions.FindAsync(dto.PositionId);
             if (position == null) return false;
 
+            var department = await _Context.Departments.FindAsync(dto.DepartmentId);
+            if (department == null) return false;
+
+            // Cập nhật thông tin thủ công hoặc dùng AutoMapper nếu DTO map đầy đủ
             _mapper.Map(dto, user);
-            user.Position = position;
+
+            // Gán ID thay vì navigation property
+            user.PositionId = dto.PositionId;
+            user.DepartmentId = dto.DepartmentId;
 
             await _Context.SaveChangesAsync();
             return true;

@@ -63,5 +63,12 @@ namespace WebApplication1.Controllers
             var result = await _userService.SearchUserAnsyc(keyword);
             return Ok(result);
         }
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterByDepartment([FromQuery] int? departmentId)
+        {
+            var result = await _userService.FilterByDepartmentAsync(departmentId);
+            return Ok(result);
+        }
     }
 }

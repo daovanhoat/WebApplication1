@@ -20,6 +20,7 @@ namespace WebApplication1.Models
         public int PositionId { get; set; }
 
         public PositionModel Position { get; set; }
+        public int DepartmentId { get; set; }
 
     }
 }

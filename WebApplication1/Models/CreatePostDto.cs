@@ -7,5 +7,6 @@
         public int Age { get; set; }
         public int Cong { get; set; }
         public int PositionId { get; set; }
+        public int DepartmentId { get; set; }
     }
 }

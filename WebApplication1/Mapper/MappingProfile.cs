@@ -15,6 +15,7 @@ namespace WebApplication1.Mapper
             CreateMap<CreatePostDto, UserModel>();
             CreateMap<PositionModel, PositionDtocs>().ReverseMap();
             CreateMap<SalaryModels, SalaryDto>().ReverseMap();
+            CreateMap<DepartmentModel, DepartmentDto>().ReverseMap();
         }
     }
 }

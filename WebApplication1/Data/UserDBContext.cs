@@ -16,5 +16,9 @@ namespace WebApplication1.Data
 
         public DbSet<AccountModel> Accounts { get; set; }
 
+        public DbSet<DepartmentModel> Departments { get; set; }
+
+        public DbSet<WorkingInfoModel> WorkingInfos { get; set; }
+
     }
 }
