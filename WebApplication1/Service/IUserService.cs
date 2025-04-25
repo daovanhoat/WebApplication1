@@ -9,7 +9,7 @@ namespace WebApplication1.Service
         Task<bool> UpdateUserAnsyc(int id, CreatePostDto dto);
         Task<bool> DeleteUserAnsyc(int id);
         Task<IEnumerable<UserModel>> SearchUserAnsyc(string keyword);
-
         Task<IEnumerable<object>> FilterByDepartmentAsync(int? departmentId);
+        Task<bool> ImportFromExcelAsync(IFormFile file);
     }
 }

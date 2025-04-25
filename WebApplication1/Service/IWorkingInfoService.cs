@@ -2,6 +2,10 @@
 {
     public interface IWorkingInfoService
     {
-        Task<IEnumerable<object>> GetWorkingInfoAsync(int UserId);
+        Task<IEnumerable<object>> GetWorkingInfoAsync();
+        //Task<bool> SeedWorkingInfoFromUsersAsync();
+        //Task<bool> UpdateWorkingInfoTimeAsync();
+        Task<IEnumerable<object>> FilterWorkingInfoAsync(int? UserId);
+
     }
 }

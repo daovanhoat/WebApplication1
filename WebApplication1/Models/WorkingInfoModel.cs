@@ -11,6 +11,8 @@ namespace WebApplication1.Models
         public int UserId { get; set; }
         public int PositionId { get; set; }
         public int DepartmentId { get; set; }
-        public DateTime Time {  get; set; }  
+        public DateTime Time {  get; set; }  // ngày bắt đầu làm
+
+        public DateTime? EndDate { get; set; } // ngày kết thúc
     }
 }

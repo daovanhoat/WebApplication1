@@ -70,5 +70,13 @@ namespace WebApplication1.Controllers
             var result = await _userService.FilterByDepartmentAsync(departmentId);
             return Ok(result);
         }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("Chua chon file");
+            await _userService.ImportFromExcelAsync(file);
+            return Ok("Import thanh cong");
+        }
     }
 }

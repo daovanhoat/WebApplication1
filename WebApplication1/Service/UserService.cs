@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using WebApplication1.Data;
 using WebApplication1.Models;
 
@@ -28,6 +29,17 @@ namespace WebApplication1.Service
             _Context.Users.Add(user);
             await _Context.SaveChangesAsync();
 
+            var workingInfo = new WorkingInfoModel
+            {
+                UserId = user.UserId,
+                PositionId = user.PositionId,
+                DepartmentId = user.DepartmentId,
+                Time = user.CreateDate,
+                EndDate = null
+            };
+            _Context.WorkingInfos.Add(workingInfo);
+            await _Context.SaveChangesAsync();
+
             return new
             {
                 id = user.UserId,
@@ -39,13 +51,18 @@ namespace WebApplication1.Service
                 HeSoLuong = position.HeSo,
                 user.DepartmentId,
                 DepartmentName = department.Name,
+                Time = user.CreateDate = DateTime.Now,
             };
         }
 
         public async Task<bool> DeleteUserAnsyc(int id)
         {
-            var user = await _Context.Users.FindAsync(id);
+            var user = await _Context.Users.FindAsync(id); 
             if (user == null) return false;
+            var workingInfos = await _Context.WorkingInfos
+                .Where(w => w.UserId == id)
+                .ToListAsync();
+            _Context.WorkingInfos.RemoveRange(workingInfos);
             _Context.Users.Remove(user);
             await _Context.SaveChangesAsync();
             return true;
@@ -98,9 +115,47 @@ namespace WebApplication1.Service
                            Hesoluong = p.HeSo,
                            u.DepartmentId,
                            DepartmentName = d.Name,
+                           u.CreateDate,
                        };
 
             return await user.ToListAsync();
+        }
+
+        public async Task<bool> ImportFromExcelAsync(IFormFile file)
+        {
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            ExcelPackage.License.SetNonCommercialPersonal("Nguyen Van A");
+            using var package = new ExcelPackage(stream);
+            var workSheet = package.Workbook.Worksheets[0];
+            var rowCount = workSheet.Dimension.Rows;
+
+            for (int row = 2; row <= rowCount; row++)
+            {
+                var user = new UserModel
+                {
+                    //UserId = int.Parse(workSheet.Cells[row, 1].Text),
+                    Name = workSheet.Cells[row, 1].Text.Trim(),
+                    DepartmentId = await GetDepartmentIdByName(workSheet.Cells[row, 2].Text.Trim()),
+                    PositionId = await GetPositionIdByName(workSheet.Cells[row, 3].Text.Trim()),
+                    Age = int.Parse(workSheet.Cells[row, 4].Text.Trim()),
+                    Gener = workSheet.Cells[row, 5].Text.Trim(),
+                    Cong = int.Parse(workSheet.Cells[row, 6].Text.Trim()),
+                };
+                _Context.Users.Add(user);
+            }
+            await _Context.SaveChangesAsync();
+            return true;
+        }
+        private async Task<int> GetDepartmentIdByName(string name)
+        {
+            var dept = await _Context.Departments.FirstOrDefaultAsync(x => x.Name == name);
+            return dept?.DepartmentId ?? throw new Exception($"Phong ban '{name}' khong ton tai. ");
+        }
+        private async Task<int> GetPositionIdByName(string name)
+        {
+            var dept = await _Context.Positions.FirstOrDefaultAsync(x => x.Name == name);
+            return dept?.PositionId ?? throw new Exception($"Chuc vu '{name}' khong ton tai. ");
         }
 
         public async Task<IEnumerable<UserModel>> SearchUserAnsyc(string keyword)
@@ -120,14 +175,43 @@ namespace WebApplication1.Service
             var department = await _Context.Departments.FindAsync(dto.DepartmentId);
             if (department == null) return false;
 
-            // Cập nhật thông tin thủ công hoặc dùng AutoMapper nếu DTO map đầy đủ
-            _mapper.Map(dto, user);
+            bool isChange = (user.PositionId != dto.PositionId || user.DepartmentId != dto.DepartmentId);
+            if (isChange)
+            {
+                var lastWorkingInfo = await _Context.WorkingInfos
+                    .Where(w => w.UserId == id && w.EndDate == null)
+                    .OrderByDescending(w => w.Time)
+                    .FirstOrDefaultAsync();
 
-            // Gán ID thay vì navigation property
-            user.PositionId = dto.PositionId;
-            user.DepartmentId = dto.DepartmentId;
+                if (lastWorkingInfo != null)
+                {
+                    lastWorkingInfo.EndDate = DateTime.Now;
+                }
+
+                _mapper.Map(dto, user);
+
+                // Gán ID thay vì navigation property
+                user.PositionId = dto.PositionId;
+                user.DepartmentId = dto.DepartmentId;
+
+                var newWorkingInfo = new WorkingInfoModel
+                {
+                    UserId = user.UserId,
+                    PositionId = user.PositionId,
+                    DepartmentId = user.DepartmentId,
+                    Time = DateTime.Now,
+                    EndDate = null
+                };
+
+                _Context.WorkingInfos.Add(newWorkingInfo);
+                await _Context.SaveChangesAsync();
+            } else
+            {
+                _mapper.Map(dto, user);
+            }
 
             await _Context.SaveChangesAsync();
+
             return true;
         }
     }
