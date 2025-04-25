@@ -74,8 +74,27 @@ namespace WebApplication1.Controllers
         [HttpPost("import")]
         public async Task<IActionResult> ImportExcel(IFormFile file)
         {
-            if (file == null || file.Length == 0) return BadRequest("Chua chon file");
-            await _userService.ImportFromExcelAsync(file);
+            //if (file == null || file.Length == 0) return BadRequest("Chua chon file");
+            var result = await _userService.ImportFromExcelAsync(file);
+
+            if (!result)
+            {
+                // Tìm file lỗi mới nhất trong thư mục
+                var dir = new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "errors"));
+                var fileError = dir.GetFiles("ImportErrors_*.xlsx")
+                    .OrderByDescending(f => f.CreationTime)
+                    .FirstOrDefault();
+
+                if (fileError != null)
+                {
+                    var fileBytes = await System.IO.File.ReadAllBytesAsync(fileError.FullName);
+                    return File(fileBytes,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "Import_Errors.xlsx");
+                }
+
+                return BadRequest("Có lỗi khi xử lý file, nhưng không tìm thấy file lỗi.");
+            }
             return Ok("Import thanh cong");
         }
     }

@@ -130,8 +130,52 @@ namespace WebApplication1.Service
             var workSheet = package.Workbook.Worksheets[0];
             var rowCount = workSheet.Dimension.Rows;
 
+            int errorCol = workSheet.Dimension.Columns + 1;
+            workSheet.Cells[1, errorCol].Value = "Lỗi";
+
+            bool hasError = false;
+
             for (int row = 2; row <= rowCount; row++)
             {
+                var errors = new List<string>();
+
+                string userId = workSheet.Cells[row, 1].Text.Trim();
+                string name = workSheet.Cells[row, 2].Text.Trim();
+                string departmentName = workSheet.Cells[row, 3].Text.Trim();
+                string positionName = workSheet.Cells[row, 4].Text.Trim();
+                string ageText = workSheet.Cells[row, 5].Text.Trim();
+                string gender = workSheet.Cells[row, 6].Text.Trim();
+                string congText = workSheet.Cells[row, 7].Text.Trim();
+
+                // Kiểm tra trống
+                if (string.IsNullOrWhiteSpace(userId)) errors.Add("Mã nhân viên trống");
+                if (string.IsNullOrWhiteSpace(name)) errors.Add("Tên trống");
+                if (string.IsNullOrWhiteSpace(departmentName)) errors.Add("Phòng ban trống");
+                if (string.IsNullOrWhiteSpace(positionName)) errors.Add("Chức vụ trống");
+                if (string.IsNullOrWhiteSpace(ageText)) errors.Add("Tuổi trống");
+                if (string.IsNullOrWhiteSpace(gender)) errors.Add("Giới tính trống");
+                if (string.IsNullOrWhiteSpace(congText)) errors.Add("Công trống");
+
+                // Kiểm tra trùng mã nhân viên
+                if (!string.IsNullOrWhiteSpace(userId))
+                {
+                    bool isDuplicate = await _Context.Users.AnyAsync(u => u.UserId == userId);
+                    if (isDuplicate) errors.Add("Trùng mã nhân viên");
+                }
+
+                // Kiểm tra parse số
+                bool isAgeValid = int.TryParse(ageText, out int age);
+                if (!isAgeValid || age < 18 || age > 65) errors.Add("Tuổi không hợp lệ");
+
+                bool isCongValid = int.TryParse(congText, out int cong);
+                if (!isCongValid || cong < 25 || cong > 30) errors.Add("Công không hợp lệ");
+
+                if (errors.Count > 0)
+                {
+                    workSheet.Cells[row, errorCol].Value = string.Join("; ", errors);
+                    hasError = true;
+                    continue; // Bỏ qua thêm vào DB nếu có lỗi
+                }
                 var user = new UserModel
                 {
                     UserId = workSheet.Cells[row, 1].Text,
@@ -144,6 +188,17 @@ namespace WebApplication1.Service
                 };
                 _Context.Users.Add(user);
             }
+            if (hasError)
+            {
+                var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "errors");
+                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+                var filePath = Path.Combine(folderPath, $"ImportErrors_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                File.WriteAllBytes(filePath, package.GetAsByteArray());
+
+                return false; // báo về controller rằng có lỗi
+            }
+
             await _Context.SaveChangesAsync();
             return true;
         }
