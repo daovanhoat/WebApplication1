@@ -20,5 +20,7 @@ namespace WebApplication1.Data
 
         public DbSet<WorkingInfoModel> WorkingInfos { get; set; }
 
+        public DbSet<AttendanceLogModel> AttendanceLogs { get; set; }
+
     }
 }

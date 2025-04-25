@@ -172,7 +172,11 @@ namespace WebApplication1.Service
 
                 if (errors.Count > 0)
                 {
-                    workSheet.Cells[row, errorCol].Value = string.Join("; ", errors);
+                    var errorMessage = string.Join("; ", errors);
+                    workSheet.Cells[row, errorCol].Value = errorMessage;
+
+                    // Định dạng ô với chữ đỏ
+                    workSheet.Cells[row, errorCol].Style.Font.Color.SetColor(System.Drawing.Color.Red);
                     hasError = true;
                     continue; // Bỏ qua thêm vào DB nếu có lỗi
                 }
