@@ -22,7 +22,7 @@ namespace WebApplication1.Controllers
         }
         [HttpGet("filter")]
 
-        public async Task<IActionResult> FilterWorkingInfo([FromQuery] int? UserId)
+        public async Task<IActionResult> FilterWorkingInfo([FromQuery] string? UserId)
         {
             var result = await _workingInfoService.FilterWorkingInfoAsync(UserId);
             return Ok(result);

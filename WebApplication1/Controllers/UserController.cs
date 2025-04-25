@@ -39,7 +39,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
             var result = await _userService.DeleteUserAnsyc(id);
             if (!result)
@@ -48,7 +48,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, CreatePostDto dto)
+        public async Task<IActionResult> PutUser(string id, CreatePostDto dto)
         {
             var result = await _userService.UpdateUserAnsyc(id, dto);
             if (!result)

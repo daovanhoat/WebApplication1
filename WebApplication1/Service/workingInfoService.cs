@@ -14,7 +14,7 @@ namespace WebApplication1.Service
             _Context = context;
         }
 
-        public async Task<IEnumerable<object>> FilterWorkingInfoAsync(int? UserId)
+        public async Task<IEnumerable<object>> FilterWorkingInfoAsync(string? UserId)
         {
             var query = from w in _Context.WorkingInfos
                         join p in _Context.Positions on w.PositionId equals p.PositionId
@@ -29,9 +29,9 @@ namespace WebApplication1.Service
                             Time = w.Time,
                             EndDate = w.EndDate,
                         };
-            if(UserId.HasValue)
+            if(!string.IsNullOrEmpty(UserId))
             {
-                query = query.Where(x => x.UserId == UserId.Value);
+                query = query.Where(x => x.UserId == UserId);
             }
             return await query.ToListAsync();
 

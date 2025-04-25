@@ -2,7 +2,7 @@
 {
     public class SalaryDto
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public decimal SalaryBasic { get; set; }
     }
 }

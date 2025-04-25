@@ -8,7 +8,7 @@ namespace WebApplication1.Models
     {
         [Key]
         public int WorkingInfoId { get; set; }
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public int PositionId { get; set; }
         public int DepartmentId { get; set; }
         public DateTime Time {  get; set; }  // ngày bắt đầu làm

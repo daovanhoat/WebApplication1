@@ -7,7 +7,9 @@ namespace WebApplication1.Models
     public class UserModel
     {
         [Key]
-        public int UserId { get; set; }
+        [MaxLength(20)]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public string UserId { get; set; }
         [MaxLength(100)]
         public string Name { get; set; }
         public string Gener { get; set; }

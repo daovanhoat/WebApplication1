@@ -5,7 +5,7 @@
         Task<IEnumerable<object>> GetWorkingInfoAsync();
         //Task<bool> SeedWorkingInfoFromUsersAsync();
         //Task<bool> UpdateWorkingInfoTimeAsync();
-        Task<IEnumerable<object>> FilterWorkingInfoAsync(int? UserId);
+        Task<IEnumerable<object>> FilterWorkingInfoAsync(string? UserId);
 
     }
 }

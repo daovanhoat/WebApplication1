@@ -55,7 +55,7 @@ namespace WebApplication1.Service
             };
         }
 
-        public async Task<bool> DeleteUserAnsyc(int id)
+        public async Task<bool> DeleteUserAnsyc(string id)
         {
             var user = await _Context.Users.FindAsync(id); 
             if (user == null) return false;
@@ -134,13 +134,13 @@ namespace WebApplication1.Service
             {
                 var user = new UserModel
                 {
-                    //UserId = int.Parse(workSheet.Cells[row, 1].Text),
-                    Name = workSheet.Cells[row, 1].Text.Trim(),
-                    DepartmentId = await GetDepartmentIdByName(workSheet.Cells[row, 2].Text.Trim()),
-                    PositionId = await GetPositionIdByName(workSheet.Cells[row, 3].Text.Trim()),
-                    Age = int.Parse(workSheet.Cells[row, 4].Text.Trim()),
-                    Gener = workSheet.Cells[row, 5].Text.Trim(),
-                    Cong = int.Parse(workSheet.Cells[row, 6].Text.Trim()),
+                    UserId = workSheet.Cells[row, 1].Text,
+                    Name = workSheet.Cells[row, 2].Text.Trim(),
+                    DepartmentId = await GetDepartmentIdByName(workSheet.Cells[row, 3].Text.Trim()),
+                    PositionId = await GetPositionIdByName(workSheet.Cells[row, 4].Text.Trim()),
+                    Age = int.Parse(workSheet.Cells[row, 5].Text.Trim()),
+                    Gener = workSheet.Cells[row, 6].Text.Trim(),
+                    Cong = int.Parse(workSheet.Cells[row, 7].Text.Trim()),
                 };
                 _Context.Users.Add(user);
             }
@@ -164,7 +164,7 @@ namespace WebApplication1.Service
                 .Where(u => u.Name.Contains(keyword)).ToListAsync();
         }
 
-        public async Task<bool> UpdateUserAnsyc(int id, CreatePostDto dto)
+        public async Task<bool> UpdateUserAnsyc(string id, CreatePostDto dto)
         {
             var user = await _Context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null) return false;
