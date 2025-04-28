@@ -56,6 +56,7 @@ builder.Services.AddScoped<IPositionService, PositionService>();
 builder.Services.AddScoped<ISalaryService, SalaryService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IWorkingInfoService, workingInfoService>();
+builder.Services.AddScoped<IAttendanceLogService, AttendenceLogService>();
 
 var app = builder.Build();
 app.UseCors();
