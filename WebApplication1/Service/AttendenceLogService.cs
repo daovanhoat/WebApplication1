@@ -191,6 +191,7 @@ namespace WebApplication1.Service
         {
             //chỉ tính công cho những nhân viên còn làm việc
 
+
             var totalDays = (toDate - fromDate).Days + 1;
 
             foreach (var userId in userIds)

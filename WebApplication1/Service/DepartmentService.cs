@@ -24,10 +24,27 @@ namespace WebApplication1.Service
             return _mapper.Map<DepartmentDto>(department);
         }
 
+        public async Task<bool> DeleteDepartment(int id)
+        {
+            var dept = await _Context.Departments.FindAsync(id);
+            _Context.Departments.Remove(dept);
+            await _Context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<List<DepartmentDto>> GetAllAsync()
         {
             var department = await _Context.Departments.ToListAsync();
             return _mapper.Map<List<DepartmentDto>>(department);
+        }
+
+        public async Task<bool> UpdateDepartment(int id, DepartmentDto dto)
+        {
+            var dept = await _Context.Departments.FindAsync(id);
+            if(dept == null) return false;
+            _mapper.Map(dto, dept);
+            await _Context.SaveChangesAsync();
+            return true;
         }
     }
 }

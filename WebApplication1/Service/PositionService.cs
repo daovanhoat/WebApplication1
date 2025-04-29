@@ -46,10 +46,7 @@ namespace WebApplication1.Service
         {
             var pos = await _context.Positions.FindAsync(id);
             if (pos == null) return false;
-
-            pos.Name = dto.Name;
-            pos.HeSo = dto.HeSo;
-
+            _mapper.Map(dto, pos);
             await _context.SaveChangesAsync();
             return true;
         }

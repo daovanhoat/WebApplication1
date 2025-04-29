@@ -27,5 +27,22 @@ namespace WebApplication1.Controllers
             var result = await _departmentService.GetAllAsync();
             return Ok(result);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDepartment(int id)
+        {
+            var result = await _departmentService.DeleteDepartment(id);
+            if(!result)
+                return NotFound();
+            return Ok(result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateDepartment(int id, DepartmentDto dto)
+        {
+            var result = await _departmentService.UpdateDepartment(id, dto);
+            if(!result) return NotFound("Khong tim thay vi tri");
+            return Ok(result);
+        }
     }
 }
