@@ -22,5 +22,7 @@ namespace WebApplication1.Data
 
         public DbSet<AttendanceLogModel> AttendanceLogs { get; set; }
 
+        public DbSet<LeaveRequestModel> LeaveRequests { get; set; }
+
     }
 }
