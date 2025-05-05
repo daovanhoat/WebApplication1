@@ -16,11 +16,20 @@ namespace WebApplication1.Service
             _mapper = mapper;
         }
 
-        public async Task<bool> ApproveRequest(int id)
+        //public async Task<bool> ApproveRequest(int id)
+        //{
+        //    var request = await _Context.LeaveRequests.FindAsync(id);
+        //    if (request == null) return false;
+        //    request.IsApproved = true;
+        //    await _Context.SaveChangesAsync();
+        //    return true;
+        //}
+
+        public async Task<bool> DeleteLeaveRequest(int id)
         {
             var request = await _Context.LeaveRequests.FindAsync(id);
             if (request == null) return false;
-            request.IsApproved = true;
+            _Context.LeaveRequests.Remove(request);
             await _Context.SaveChangesAsync();
             return true;
         }
@@ -31,6 +40,7 @@ namespace WebApplication1.Service
                                 join u in _Context.Users on l.UserId equals u.UserId
                                 select new LeaveRequestDto
                                 {
+                                    Id = l.Id,
                                     UserId = l.UserId,
                                     UserName = u.Name,
                                     FromDate = l.FromDate,
@@ -38,6 +48,7 @@ namespace WebApplication1.Service
                                     FromTime = l.FromTime,
                                     ToTime = l.ToTime,
                                     Type = l.Type,
+                                    Shift = l.Shift,
                                     Reason = l.Reason,
                                     Description = l.Description,
                                     CreatedAt = l.CreatedAt,
@@ -52,14 +63,14 @@ namespace WebApplication1.Service
             return await _Context.LeaveRequests.Where(l => l.UserId == userId).ToListAsync();
         }
 
-        public async Task<bool> RejectRequest(int id)
-        {
-            var request = await _Context.LeaveRequests.FindAsync(id);
-            if (request == null) return false;
-            _Context.LeaveRequests.Remove(request);
-            await _Context.SaveChangesAsync();
-            return true;
-        }
+        //public async Task<bool> RejectRequest(int id)
+        //{
+        //    var request = await _Context.LeaveRequests.FindAsync(id);
+        //    if (request == null) return false;
+        //    _Context.LeaveRequests.Remove(request);
+        //    await _Context.SaveChangesAsync();
+        //    return true;
+        //}
 
         public async Task<bool> SubmitLeaveRequest(LeaveRequestDto dto)
         {
@@ -67,7 +78,7 @@ namespace WebApplication1.Service
         .FirstOrDefaultAsync(u => u.UserId == dto.UserId); // hoặc u.EmployeeCode == dto.EmployeeCode
 
             if (user == null)
-                throw new Exception("Không tìm thấy người dùng.");
+                throw new Exception("Không tìm thấy nhân viên.");
 
             var leave = new LeaveRequestModel
             {
@@ -78,6 +89,7 @@ namespace WebApplication1.Service
                 ToTime = dto.ToTime,
                 Type = dto.Type,
                 Reason = dto.Reason,
+                Shift = dto.Shift,
                 Description = dto.Description
             };
 

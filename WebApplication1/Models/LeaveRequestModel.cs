@@ -11,6 +11,7 @@ namespace WebApplication1.Models
         public TimeSpan? FromTime { get; set; }
         public TimeSpan? ToTime { get; set; }
         public LeaveType Type { get; set; }
+        public LeaveShift? Shift { get; set; }
         public LeaveReason Reason { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;

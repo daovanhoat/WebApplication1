@@ -28,24 +28,31 @@ namespace WebApplication1.Controllers
             return Ok(list);
         }
 
-        [HttpGet("user/{userId}")]
+        [HttpGet("filter")]
         public async Task<IActionResult> GetByUser(string userId)
         {
             var list = await _leaveRequestService.GetByUserIdLeaveRequest(userId);
             return Ok(list);
         }
 
-        [HttpPost("approve/{id}")]
-        public async Task<IActionResult> Approve(int id)
-        {
-            var result = await _leaveRequestService.ApproveRequest(id);
-            return Ok(result);
-        }
+        //[HttpPost("approve/{id}")]
+        //public async Task<IActionResult> Approve(int id)
+        //{
+        //    var result = await _leaveRequestService.ApproveRequest(id);
+        //    return Ok(result);
+        //}
 
-        [HttpPost("reject/{id}")]
-        public async Task<IActionResult> Reject(int id)
+        //[HttpPost("reject/{id}")]
+        //public async Task<IActionResult> Reject(int id)
+        //{
+        //    var result = await _leaveRequestService.RejectRequest(id);
+        //    return Ok(result);
+        //}
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var result = await _leaveRequestService.RejectRequest(id);
+            var result = await _leaveRequestService.DeleteLeaveRequest(id);
             return Ok(result);
         }
     }

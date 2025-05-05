@@ -7,8 +7,10 @@ namespace WebApplication1.Service
         Task<bool> SubmitLeaveRequest(LeaveRequestDto dto);
         Task<List<LeaveRequestDto>> GetAllLeaveRequest();
         Task<List<LeaveRequestModel>> GetByUserIdLeaveRequest(string userId);
-        Task<bool> ApproveRequest(int id);
-        Task<bool> RejectRequest(int  id);
+        //Task<bool> ApproveRequest(int id);
+        //Task<bool> RejectRequest(int  id);
+
+        Task<bool> DeleteLeaveRequest(int id);
 
     }
 }
