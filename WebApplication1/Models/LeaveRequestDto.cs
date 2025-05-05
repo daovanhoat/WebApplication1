@@ -17,6 +17,9 @@ namespace WebApplication1.Models
         public LeaveReason Reason { get; set; }
         public string? Description { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public string ShiftName { get; set; } = "";
+        public string TypeName { get; set; } = "";
+        public string ReasonName { get; set; } = "";
         public bool IsApproved { get; set; } = false;
     }
 }

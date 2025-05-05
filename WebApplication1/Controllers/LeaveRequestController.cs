@@ -22,37 +22,29 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllLeave()
+        public async Task<IActionResult> GetAllLeave(
+            [FromQuery] string? userId,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] string? keyword
+        )
+            
         {
-            var list = await _leaveRequestService.GetAllLeaveRequest();
+            var list = await _leaveRequestService.GetAllLeaveRequest(userId, fromDate, toDate, keyword);
             return Ok(list);
         }
 
-        [HttpGet("filter")]
-        public async Task<IActionResult> GetByUser(string userId)
+        [HttpPost("approve/{id}")]
+        public async Task<IActionResult> Approve(int id)
         {
-            var list = await _leaveRequestService.GetByUserIdLeaveRequest(userId);
-            return Ok(list);
+            var result = await _leaveRequestService.ApproveRequest(id);
+            return Ok(result);
         }
 
-        //[HttpPost("approve/{id}")]
-        //public async Task<IActionResult> Approve(int id)
-        //{
-        //    var result = await _leaveRequestService.ApproveRequest(id);
-        //    return Ok(result);
-        //}
-
-        //[HttpPost("reject/{id}")]
-        //public async Task<IActionResult> Reject(int id)
-        //{
-        //    var result = await _leaveRequestService.RejectRequest(id);
-        //    return Ok(result);
-        //}
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpPost("{id}")]
+        public async Task<IActionResult> Reject(int id)
         {
-            var result = await _leaveRequestService.DeleteLeaveRequest(id);
+            var result = await _leaveRequestService.RejectRequest(id);
             return Ok(result);
         }
     }

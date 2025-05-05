@@ -1,10 +1,12 @@
-﻿using WebApplication1.Enum;
+﻿using System.ComponentModel.DataAnnotations;
+using WebApplication1.Enum;
 
 namespace WebApplication1.Models
 {
     public class LeaveRequestModel
     {
-        public int Id { get; set; }
+        [Key]
+        public int IdLeaveRequest { get; set; }
         public string UserId { get; set; }
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }

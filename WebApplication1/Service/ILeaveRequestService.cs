@@ -5,12 +5,14 @@ namespace WebApplication1.Service
     public interface ILeaveRequestService
     {
         Task<bool> SubmitLeaveRequest(LeaveRequestDto dto);
-        Task<List<LeaveRequestDto>> GetAllLeaveRequest();
-        Task<List<LeaveRequestModel>> GetByUserIdLeaveRequest(string userId);
-        //Task<bool> ApproveRequest(int id);
-        //Task<bool> RejectRequest(int  id);
-
-        Task<bool> DeleteLeaveRequest(int id);
+        Task<List<LeaveRequestDto>> GetAllLeaveRequest(
+            string? userId = null, 
+            DateTime? fromDate = null, 
+            DateTime? toDate = null, 
+            string? keyword = null
+            );
+        Task<bool> ApproveRequest(int id);
+        Task<bool> RejectRequest(int id);
 
     }
 }
