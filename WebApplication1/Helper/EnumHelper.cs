@@ -19,9 +19,9 @@ namespace WebApplication1.Helper
         {
             return type switch
             {
-                LeaveType.FullDay => "Cả ngày",
-                LeaveType.HalfDay => "Nửa ngày",
-                LeaveType.HourDay => "Theo giờ",
+                LeaveType.FullDay => "Nghỉ cả ngày",
+                LeaveType.HalfDay => "Nghỉ nửa ngày",
+                LeaveType.HourDay => "Nghỉ theo giờ",
                 _ => ""
             };
         }

@@ -68,10 +68,10 @@ namespace WebApplication1.Service
                 query = query.Where(x => x.ToDate.Date <= toDate.Value.Date);
             }
 
-            // Thực thi truy vấn
+            
             var data = await query.ToListAsync();
 
-            // Ánh xạ tiếng Việt
+            
             foreach (var item in data)
             {
                 item.TypeName = EnumHelper.GetTypeName(item.Type);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using WebApplication1.Data;
+using WebApplication1.Enum;
 using WebApplication1.Models;
 
 namespace WebApplication1.Service
@@ -209,21 +210,80 @@ namespace WebApplication1.Service
                         continue;
                     }
 
-                    var workingHours = (checkOut - checkIn).TotalHours - 1.5; // Trừ nghỉ trưa 1 tiếng 30 phút
+                    var approveLeave = await _Context.LeaveRequests.FirstOrDefaultAsync(l =>
+                        l.UserId == userId &&
+                        //l.IsApproved == true &&
+                        l.FromDate.Date <= currentDate.Date &&
+                        l.ToDate.Date >= currentDate.Date
+                    );
 
+                    var workingHours = (checkOut - checkIn).TotalHours - 1.5; // Trừ nghỉ trưa 1 tiếng 30 phút
                     double totalHours = 0;
-                    if (workingHours >= 8)
+                    double leaveHours = 0;
+
+                    // Nếu có đơn nghỉ
+                    if (approveLeave != null)
                     {
-                        totalHours = 1.0;
-                    }
-                    else if (workingHours > 0)
-                    {
-                        totalHours = 0.5;
+                        // Nghỉ theo giờ thì tính số giờ nghỉ
+                        if (approveLeave.Type == LeaveType.HourDay && approveLeave.FromTime.HasValue && approveLeave.ToTime.HasValue)
+                        {
+                            leaveHours = (approveLeave.ToTime.Value - approveLeave.FromTime.Value).TotalHours;
+                        }
+
+                        if (approveLeave.IsApproved)
+                        {
+                            // Đơn nghỉ đã được duyệt
+                            switch (approveLeave.Type)
+                            {
+                                case LeaveType.FullDay:
+                                    totalHours = (approveLeave.Reason == LeaveReason.Paid || approveLeave.Reason == LeaveReason.Annual) ? 8 : 0;
+                                    break;
+
+                                case LeaveType.HalfDay:
+                                    totalHours = (approveLeave.Reason == LeaveReason.Paid || approveLeave.Reason == LeaveReason.Annual) ? 8 : 4;
+                                    break;
+
+                                case LeaveType.HourDay:
+                                    totalHours = (approveLeave.Reason == LeaveReason.Paid || approveLeave.Reason == LeaveReason.Annual)
+                                                ? workingHours + leaveHours
+                                                : workingHours - leaveHours;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            // Đơn nghỉ KHÔNG được duyệt → trừ giờ nghỉ khỏi công thực tế
+                            switch (approveLeave.Type)
+                            {
+                                case LeaveType.FullDay:
+                                    leaveHours = 8;
+                                    break;
+                                case LeaveType.HalfDay:
+                                    leaveHours = 4;
+                                    break;
+                                case LeaveType.HourDay:
+                                    // leaveHours đã tính phía trên
+                                    break;
+                            }
+
+                            totalHours = workingHours - leaveHours;
+                        }
                     }
                     else
                     {
-                        totalHours = 0;
+                        // Không có đơn nghỉ → chỉ tính thời gian làm việc thực tế
+                        totalHours = workingHours;
                     }
+
+                    // Đảm bảo không vượt quá 1 công và không âm
+                    totalHours = Math.Clamp(totalHours, 0, 8);
+                    double workUnit = 0;
+                    if (totalHours >= 8)
+                        workUnit = 1.0;
+                    else if (totalHours >= 4)
+                        workUnit = 0.5;
+                    else
+                        workUnit = 0;
 
                     var log = new AttendanceLogModel
                     {
@@ -232,7 +292,7 @@ namespace WebApplication1.Service
                         ToDate = currentDate,
                         CheckInTime = checkIn,
                         CheckOutTime = checkOut,
-                        TotalHours = totalHours,
+                        TotalHours = workUnit,
                         Description = Description
                     };
 
