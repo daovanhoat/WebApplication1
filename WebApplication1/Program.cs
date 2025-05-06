@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApplication1.Mapper;
 using WebApplication1.Service;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,11 @@ builder.Services.AddDbContext<UserDBContext>(Options =>
 {
     Options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+});
+
 
 builder.Services.AddCors(Options => Options.AddDefaultPolicy(policy => policy.WithOrigins("http://localhost:5173")
 .AllowAnyMethod().AllowAnyHeader()));
@@ -76,6 +82,7 @@ app.UseAuthorization();
 app.UseAuthentication();
 
 app.UseAuthorization();
+app.UseStaticFiles();
 
 app.MapControllers();
 

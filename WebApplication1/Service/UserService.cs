@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Text.RegularExpressions;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using WebApplication1.Data;
@@ -26,6 +27,28 @@ namespace WebApplication1.Service
             if (department == null) return null;
 
             var user = _mapper.Map<UserModel>(dto);
+            // Xử lý ảnh base64
+            if (!string.IsNullOrWhiteSpace(dto.AvatarBase64))
+            {
+                var match = Regex.Match(dto.AvatarBase64, @"data:image/(?<type>.+?);base64,(?<data>.+)");
+                if (match.Success)
+                {
+                    var type = match.Groups["type"].Value;
+                    var base64Data = match.Groups["data"].Value;
+                    var bytes = Convert.FromBase64String(base64Data);
+
+                    var fileName = Guid.NewGuid().ToString() + $".{type}";
+                    var folderPath = Path.Combine("wwwroot", "uploads", "avatars");
+
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    var filePath = Path.Combine(folderPath, fileName);
+                    await File.WriteAllBytesAsync(filePath, bytes);
+
+                    user.Avatar = $"/uploads/avatars/{fileName}";
+                }
+            }
             _Context.Users.Add(user);
             await _Context.SaveChangesAsync();
 
@@ -45,6 +68,7 @@ namespace WebApplication1.Service
                 id = user.UserId,
                 user.Name,
                 user.Age,
+                user.Avatar,
                 user.Cong,
                 user.PositionId,
                 PositionName = position.Name,
@@ -108,6 +132,7 @@ namespace WebApplication1.Service
                            u.UserId,
                            u.Name,
                            u.Gener,
+                           u.Avatar,
                            u.Age,
                            u.Cong,
                            u.PositionId,
@@ -267,6 +292,28 @@ namespace WebApplication1.Service
             } else
             {
                 _mapper.Map(dto, user);
+            }
+            // Xử lý ảnh base64 nếu có
+            if (!string.IsNullOrWhiteSpace(dto.AvatarBase64))
+            {
+                var match = Regex.Match(dto.AvatarBase64, @"data:image/(?<type>.+?);base64,(?<data>.+)");
+                if (match.Success)
+                {
+                    var type = match.Groups["type"].Value;
+                    var base64Data = match.Groups["data"].Value;
+                    var bytes = Convert.FromBase64String(base64Data);
+
+                    var fileName = Guid.NewGuid().ToString() + $".{type}";
+                    var folderPath = Path.Combine("wwwroot", "uploads", "avatars");
+
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    var filePath = Path.Combine(folderPath, fileName);
+                    await File.WriteAllBytesAsync(filePath, bytes);
+
+                    user.Avatar = $"/uploads/avatars/{fileName}";
+                }
             }
 
             await _Context.SaveChangesAsync();

@@ -17,6 +17,7 @@ namespace WebApplication1.Models
         public int Age { get; set; } 
         [Range(0, 30)]
         public int  Cong { get; set; }
+        public string Avatar { get; set; }
         public DateTime CreateDate { get; set; } = DateTime.Now;
 
         [ForeignKey("Position")]

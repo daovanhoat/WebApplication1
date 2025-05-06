@@ -142,35 +142,81 @@ namespace WebApplication1.Service
                     continue;
                 }
 
-                // Tính công nếu không có lỗi
-                double totalHours = 0;
-                if (checkInTime.TimeOfDay == TimeSpan.Zero || checkOutTime.TimeOfDay == TimeSpan.Zero)
+                for (var currentDate = fromDate.Date; currentDate <= toDate.Date; currentDate = currentDate.AddDays(1))
                 {
-                    totalHours = 0;
-                }
-                else
-                {
+                    var approveLeave = await _Context.LeaveRequests.FirstOrDefaultAsync(l =>
+                        l.UserId == userId &&
+                        l.FromDate.Date <= currentDate &&
+                        l.ToDate.Date >= currentDate
+                    );
+
                     var workingHours = (checkOutTime - checkInTime).TotalHours - 1.5;
-                    if (workingHours >= 8)
-                        totalHours = 1.0;
-                    else if (workingHours > 0)
-                        totalHours = 0.5;
+                    double totalHours = 0;
+                    double leaveHours = 0;
+
+                    if (approveLeave != null)
+                    {
+                        if (approveLeave.Type == LeaveType.HourDay && approveLeave.FromTime.HasValue && approveLeave.ToTime.HasValue)
+                        {
+                            leaveHours = (approveLeave.ToTime.Value - approveLeave.FromTime.Value).TotalHours;
+                        }
+
+                        if (approveLeave.IsApproved)
+                        {
+                            switch (approveLeave.Type)
+                            {
+                                case LeaveType.FullDay:
+                                    totalHours = (approveLeave.Reason == LeaveReason.Paid || approveLeave.Reason == LeaveReason.Annual) ? 8 : 0;
+                                    break;
+
+                                case LeaveType.HalfDay:
+                                    totalHours = (approveLeave.Reason == LeaveReason.Paid || approveLeave.Reason == LeaveReason.Annual) ? 4 : 0;
+                                    break;
+
+                                case LeaveType.HourDay:
+                                    totalHours = (approveLeave.Reason == LeaveReason.Paid || approveLeave.Reason == LeaveReason.Annual)
+                                        ? workingHours + leaveHours
+                                        : workingHours - leaveHours;
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            switch (approveLeave.Type)
+                            {
+                                case LeaveType.FullDay: leaveHours = 8; break;
+                                case LeaveType.HalfDay: leaveHours = 4; break;
+                                    // case HourDay đã xử lý phía trên
+                            }
+
+                            totalHours = workingHours - leaveHours;
+                        }
+                    }
                     else
-                        totalHours = 0;
+                    {
+                        totalHours = workingHours;
+                    }
+
+                    totalHours = Math.Clamp(totalHours, 0, 8);
+                    double workUnit = 0;
+                    if (totalHours >= 8)
+                        workUnit = 1.0;
+                    else if (totalHours >= 4)
+                        workUnit = 0.5;
+
+                    var attendance = new AttendanceLogModel
+                    {
+                        userId = userId,
+                        FromDate = currentDate,
+                        ToDate = currentDate,
+                        CheckInTime = checkInTime,
+                        CheckOutTime = checkOutTime,
+                        TotalHours = workUnit,
+                        Description = workSheet.Cells[row, 7].Text.Trim()
+                    };
+
+                    _Context.AttendanceLogs.Add(attendance);
                 }
-
-                var attendance = new AttendanceLogModel
-                {
-                    userId = userId,
-                    FromDate = fromDate,
-                    ToDate = toDate,
-                    CheckInTime = checkInTime,
-                    CheckOutTime = checkOutTime,
-                    TotalHours = totalHours,
-                    Description = workSheet.Cells[row, 7].Text.Trim()
-                };
-
-                _Context.AttendanceLogs.Add(attendance);
             }
 
             if (hasError)
