@@ -4,9 +4,11 @@ using WebApplication1.Data;
 using WebApplication1.Models;
 using AutoMapper;
 using WebApplication1.Service;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplication1.Controllers
 {
+    
     [Route("api/account")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -27,6 +29,7 @@ namespace WebApplication1.Controllers
             return Ok(result);
         }
 
+        //[Authorize]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
@@ -36,13 +39,14 @@ namespace WebApplication1.Controllers
             return Ok(account);
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var list = await _accountService.GetAllAsync();
             return Ok(list);
         }
-
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAccunt (int id)
         {

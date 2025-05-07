@@ -25,6 +25,6 @@ namespace WebApplication1.Models
 
         public PositionModel Position { get; set; }
         public int DepartmentId { get; set; }
-
+        public int AccountId { get; set; }
     }
 }

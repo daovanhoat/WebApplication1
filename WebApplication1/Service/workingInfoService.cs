@@ -37,12 +37,13 @@ namespace WebApplication1.Service
 
         }
 
-        public async Task<IEnumerable<object>> GetWorkingInfoAsync()
+        public async Task<IEnumerable<object>> GetWorkingInfoAsync(string userId = null)
         {
             var query = from w in _Context.WorkingInfos
                         join p in _Context.Positions on w.PositionId equals p.PositionId
                         join d in _Context.Departments on w.DepartmentId equals d.DepartmentId
                         join u in _Context.Users on w.UserId equals u.UserId
+                        where userId == null || w.UserId == userId // chỉ lọc nếu có userId
                         orderby w.Time descending
                         select new
                         {
@@ -53,8 +54,11 @@ namespace WebApplication1.Service
                             Time = w.Time,
                             EndDate = w.EndDate,
                         };
+
             return await query.ToListAsync();
         }
+
+
 
         //public async Task<bool> UpdateWorkingInfoTimeAsync()
         //{

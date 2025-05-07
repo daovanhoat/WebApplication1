@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using WebApplication1.Enum;
 
 namespace WebApplication1.Models
 {
@@ -15,5 +16,8 @@ namespace WebApplication1.Models
         [Required, MaxLength(100), EmailAddress]
         public string Email { get; set; }
         public DateTime createAt { get; set; } = DateTime.Now;
+        public string UserId { get; set; }
+
+        public Role Role { get; set; }
     }
 }

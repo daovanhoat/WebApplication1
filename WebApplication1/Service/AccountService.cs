@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
+using WebApplication1.Enum;
+using WebApplication1.Helper;
 using WebApplication1.Models;
 
 namespace WebApplication1.Service
@@ -9,28 +11,46 @@ namespace WebApplication1.Service
     {
         private readonly UserDBContext _Context;
         private readonly IMapper _mapper;
+        private readonly tokenHelper _tokenHelper;
 
-        public AccountService(UserDBContext context, IMapper mapper)
+        public AccountService(UserDBContext context, IMapper mapper, tokenHelper tokenHelper)
         {
             _Context = context;
             _mapper = mapper;
+            _tokenHelper = tokenHelper;
         }
 
         public async Task<string> RegisterAsync(RegisterDto registerDto)
         {
-            var exist = await _Context.Accounts
-                .AnyAsync(a => a.UserName == registerDto.UserName || a.Email == registerDto.Email);
-            if (exist)
+            // Kiểm tra xem UserId có tồn tại trong bảng User không
+            var userExists = await _Context.Users
+                .AnyAsync(u => u.UserId == registerDto.UserId);
+
+            if (!userExists)
+                return "Mã nhân viên không tồn tại";
+
+            // Kiểm tra xem tài khoản đã tồn tại chưa
+            var accountExists = await _Context.Accounts
+                .AnyAsync(a => a.UserName == registerDto.UserId || a.Email == registerDto.Email);
+
+            if (accountExists)
+                return "Tài khoản đã tồn tại";
+
+            // Tạo tài khoản mới
+            var account = new AccountModel
             {
-                return "Tai khoan da ton tai";
-            }
-            var account = _mapper.Map<AccountModel>(registerDto);
-            account.createAt = DateTime.Now;
+                UserName = registerDto.UserId,
+                Password = registerDto.Password, // nên mã hóa mật khẩu
+                Email = registerDto.Email,
+                UserId = registerDto.UserId,
+                Role = Role.User, // mặc định là User
+                createAt = DateTime.Now
+            };
 
             _Context.Accounts.Add(account);
             await _Context.SaveChangesAsync();
 
-            return "Dang ky thanh cong";
+            return "Đăng ký thành công";
         }
 
         public async Task<AccountDto> LoginAsync(LoginDto loginDto)
@@ -42,8 +62,19 @@ namespace WebApplication1.Service
                 return null;
             }
 
-            return _mapper.Map<AccountDto>(account);
+            // Lấy UserId từ bảng Users (nếu có)
+            var user = await _Context.Users.FirstOrDefaultAsync(u => u.AccountId == account.AccountId);
+            if (user != null)
+            {
+                account.UserId = user.UserId; // ← Gán lại UserId đúng từ bảng Users
+            }
+
+            var accountDto = _mapper.Map<AccountDto>(account);
+            accountDto.Token = _tokenHelper.GenerateJwtToken(account); // Tạo JWT và gán vào DTO
+
+            return accountDto;
         }
+
 
         public async Task<List<AccountDto>> GetAllAsync()
         {

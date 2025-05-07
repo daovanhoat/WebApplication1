@@ -9,8 +9,11 @@ using System.Text;
 using WebApplication1.Mapper;
 using WebApplication1.Service;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using WebApplication1.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+
 
 // Add services to the container.
 
@@ -42,7 +45,11 @@ builder.Services.AddControllers()
         v.RegisterValidatorsFromAssembly(Assembly.GetExecutingAssembly());
     });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
@@ -51,9 +58,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = "your-app",
-        ValidAudience = "your-app",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
+        ValidIssuer = config["Jwt:Issuer"],
+        ValidAudience = config["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]))
     };
 });
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -64,6 +71,9 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IWorkingInfoService, workingInfoService>();
 builder.Services.AddScoped<IAttendanceLogService, AttendenceLogService>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+
+builder.Services.AddScoped<tokenHelper>();
+
 
 var app = builder.Build();
 app.UseCors();
@@ -76,12 +86,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
 app.UseAuthentication();
 
 app.UseAuthorization();
+
 app.UseStaticFiles();
 
 app.MapControllers();
