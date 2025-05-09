@@ -49,10 +49,11 @@ namespace WebApplication1.Service
 
         }
 
-        public async Task<List<AttendenceDto>> GetAttendanceLogsAsync()
+        public async Task<List<AttendenceDto>> GetAttendanceLogsAsync(string userId = null)
         {
             var result = await (from log in _Context.AttendanceLogs
                                 join user in _Context.Users on log.userId equals user.UserId
+                                where userId == null || log.userId == userId
                                 select new AttendenceDto
                                 {
                                     UserId = new List<string> { log.userId },

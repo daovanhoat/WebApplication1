@@ -17,6 +17,7 @@ namespace WebApplication1.Models
         public string Email { get; set; }
         public DateTime createAt { get; set; } = DateTime.Now;
         public string UserId { get; set; }
+        public bool IsFirstLogin { get; set; } = true;
 
         public Role Role { get; set; }
     }

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Models;
 using WebApplication1.Service;
 
@@ -15,27 +17,39 @@ namespace WebApplication1.Controllers
             _attendanceLogService = attendanceLogService;
         }
 
-        public class AttendanceLogRequest
-        {
-            public List<string> UserIds { get; set; }
-            public DateTime FromDate { get; set; }
-            public DateTime ToDate { get; set; }
-            public TimeSpan CheckInTime { get; set; }
-            public TimeSpan CheckOutTime { get; set; }
-
-            public string Description { get; set; }
-        }
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAttendanceLogs()
         {
-            var logs = await _attendanceLogService.GetAttendanceLogsAsync();
-            return Ok(logs);
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(role))
+                return Unauthorized("Không xác định được quyền truy cập.");
+            if(role == "Admin")
+            {
+                var all = await _attendanceLogService.GetAttendanceLogsAsync();
+                return Ok(all);
+            }
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Không xác định được người dùng.");
+            var mine = await _attendanceLogService.GetAttendanceLogsAsync(userId);
+            return Ok(mine);
         }
 
         [HttpPost]
-        public async Task<IActionResult> LogAttendance([FromBody] AttendanceLogRequest request)
+        public async Task<IActionResult> AddLogAttendance([FromBody] AttendenceLogRequestDto request)
         {
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+
+            if (string.IsNullOrEmpty(role))
+                return Unauthorized("Không xác định được người dùng hoặc vai trò");
+
+            if (role != "Admin")
+            {
+                // Nếu không phải admin, chỉ cho phép chấm công cho chính họ
+                request.UserIds = new List<string> { userId };
+            }
             var result = await _attendanceLogService.LogAttendanceAsync(
                 request.UserIds,
                 request.FromDate,
@@ -60,9 +74,12 @@ namespace WebApplication1.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpGet("filter")]
         public async Task<IActionResult> FilterAttendence([FromQuery] string? userId)
         {
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            if (role != "Admin") return Unauthorized();
             var result = await _attendanceLogService.FilterByUserAsync(userId);
             return Ok(result);
         }

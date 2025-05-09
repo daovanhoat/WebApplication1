@@ -8,7 +8,7 @@ namespace WebApplication1.Service
         Task<object> CreateUserAnsyc(CreatePostDto dto);
         Task<bool> UpdateUserAnsyc(string id, CreatePostDto dto);
         Task<bool> DeleteUserAnsyc(string id);
-        Task<IEnumerable<UserModel>> SearchUserAnsyc(string keyword);
+        Task<IEnumerable<UserDto>> SearchUserAnsyc(string keyword);
         Task<IEnumerable<object>> FilterByDepartmentAsync(int? departmentId);
         Task<bool> ImportFromExcelAsync(IFormFile file);
     }

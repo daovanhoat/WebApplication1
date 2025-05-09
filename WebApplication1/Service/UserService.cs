@@ -103,6 +103,7 @@ namespace WebApplication1.Service
                             u.UserId,
                             u.Name,
                             u.Gener,
+                            u.Avatar,
                             u.Age,
                             u.Cong,
                             u.PositionId,
@@ -242,10 +243,27 @@ namespace WebApplication1.Service
             return dept?.PositionId ?? throw new Exception($"Chuc vu '{name}' khong ton tai. ");
         }
 
-        public async Task<IEnumerable<UserModel>> SearchUserAnsyc(string keyword)
+        public async Task<IEnumerable<UserDto>> SearchUserAnsyc(string keyword)
         {
-            return await _Context.Users
-                .Where(u => u.Name.Contains(keyword)).ToListAsync();
+
+            var query = from u in _Context.Users.Where(u => u.Name.Contains(keyword))
+                        join p in _Context.Positions on u.PositionId equals p.PositionId
+                        join d in _Context.Departments on u.DepartmentId equals d.DepartmentId
+                        select new UserDto
+                        {
+                            UserId = u.UserId,
+                            Name = u.Name,
+                            Gener = u.Gener,
+                            Avatar = u.Avatar,
+                            Age = u.Age,
+                            Cong = u.Cong,
+                            PositionId = u.PositionId,
+                            PositionName = p.Name,
+                            DepartmentId = u.DepartmentId,
+                            DepartmentName = d.Name
+                        };
+
+            return await query.ToListAsync();
         }
 
         public async Task<bool> UpdateUserAnsyc(string id, CreatePostDto dto)

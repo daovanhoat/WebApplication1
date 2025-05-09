@@ -43,11 +43,13 @@ namespace WebApplication1.Controllers
             return Ok(mine);
         }
 
-
+        [Authorize]
         [HttpGet("filter")]
 
         public async Task<IActionResult> FilterWorkingInfo([FromQuery] string? UserId)
         {
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            if (role != "Admin") return Unauthorized();
             var result = await _workingInfoService.FilterWorkingInfoAsync(UserId);
             return Ok(result);
         }

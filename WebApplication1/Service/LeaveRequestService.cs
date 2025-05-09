@@ -37,6 +37,8 @@ namespace WebApplication1.Service
         {
             var query = from l in _Context.LeaveRequests
                         join u in _Context.Users on l.UserId equals u.UserId
+                        where userId == null || l.UserId == userId
+                        orderby l.FromDate descending
                         select new LeaveRequestDto
                         {
                             Id = l.IdLeaveRequest,
@@ -107,7 +109,7 @@ namespace WebApplication1.Service
         public async Task<bool> SubmitLeaveRequest(LeaveRequestDto dto)
         {
             var user = await _Context.Users
-        .FirstOrDefaultAsync(u => u.UserId == dto.UserId); // hoặc u.EmployeeCode == dto.EmployeeCode
+        .FirstOrDefaultAsync(u => u.UserId == dto.UserId); 
 
             if (user == null)
                 throw new Exception("Không tìm thấy nhân viên.");

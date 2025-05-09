@@ -40,16 +40,16 @@ namespace WebApplication1.Service
             var account = new AccountModel
             {
                 UserName = registerDto.UserId,
-                Password = registerDto.Password, // nên mã hóa mật khẩu
+                Password = registerDto.Password, 
                 Email = registerDto.Email,
                 UserId = registerDto.UserId,
                 Role = Role.User, // mặc định là User
-                createAt = DateTime.Now
+                createAt = DateTime.Now,
+                IsFirstLogin = true,
             };
 
             _Context.Accounts.Add(account);
             await _Context.SaveChangesAsync();
-
             return "Đăng ký thành công";
         }
 
